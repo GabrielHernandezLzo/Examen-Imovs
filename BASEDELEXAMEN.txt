@@ -1,0 +1,42 @@
+-- Crear la base de datos
+CREATE DATABASE GestionPagos;
+GO
+-- Usar la base de datos
+USE GestionPagos;
+GO
+-- Tabla de Productos
+CREATE TABLE ProductoT (
+    ProductoId INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    PrecioUnitario DECIMAL(10, 2) NOT NULL CHECK (PrecioUnitario >= 0)
+);
+-- Tabla de Tickets
+CREATE TABLE TicketR (
+    TicketId INT PRIMARY KEY IDENTITY(1,1),
+    Folio NVARCHAR(50) NOT NULL UNIQUE,
+    FechaCreacion DATETIME NOT NULL DEFAULT GETDATE(),
+    FechaLiquidacion DATETIME NULL,
+    Estatus NVARCHAR(20) NOT NULL DEFAULT 'Por pagar' CHECK (Estatus IN ('Por pagar', 'Pagado', 'Cancelado'))
+);
+-- Detalle de productos por ticket
+CREATE TABLE DetalleTickets (
+    DetalleId INT PRIMARY KEY IDENTITY(1,1),
+    TicketId INT NOT NULL,
+    ProductoId INT NOT NULL,
+    Cantidad INT NOT NULL CHECK (Cantidad > 0),
+    PrecioUnitario DECIMAL(10, 2) NOT NULL CHECK (PrecioUnitario >= 0),
+    PrecioTotal AS (Cantidad * PrecioUnitario) PERSISTED, -- Cálculo automático
+    FOREIGN KEY (TicketId) REFERENCES Tickets(TicketId),
+    FOREIGN KEY (ProductoId) REFERENCES Productos(ProductoId)
+);
+
+-- Tabla de Pagos
+CREATE TABLE Pago (
+    PagoId INT PRIMARY KEY IDENTITY(1,1),
+    TicketId INT NOT NULL,
+    FolioPago NVARCHAR(50) NOT NULL UNIQUE,
+    NumeroPago INT NOT NULL CHECK (NumeroPago > 0),
+    Monto DECIMAL(10, 2) NOT NULL CHECK (Monto >= 0),
+    FechaPago DATETIME NOT NULL DEFAULT GETDATE(),
+    FOREIGN KEY (TicketId) REFERENCES Tickets(TicketId)
+);
